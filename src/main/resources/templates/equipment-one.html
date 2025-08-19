@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{default}" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Оборудование</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+  <!-- Заголовок с оборудованием -->
+  <div class="mb-3">
+    <h2 th:text="'Оборудование: ' + ${equipment.name}"></h2>
+  </div>
+
+  <!-- Кнопка для добавления Facility -->
+  <div class="mb-4">
+    <form method="POST" th:action="@{'/equipment/' + ${equipment.id} + '/add-facility'}">
+      <div th:if="${equipment.status.name() == 'CREATE'} and ${userRole != 'USER'}" class="input-group">
+        <select class="form-select" name="facilityId">
+          <option th:each="facility : ${allFacilities}" th:value="${facility.id}" th:text="${facility.name}"></option>
+        </select>
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-screwdriver-wrench"></i> Добавить
+        </button>
+      </div>
+    </form>
+  </div>
+  <div th:if="${equipmentFacilities.isEmpty() and userRole == 'ADMIN'}">
+    <p class="empty-message">Тут пусто. Добавьте услуги в ремонт!</p>
+  </div>
+  <!-- Таблица с объектами Facility, связанными с оборудованием -->
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="thead-dark">
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Название</th>
+        <th scope="col">Цена</th>
+        <th scope="col">Действия</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="equipmentFacility, iterator : ${equipmentFacilities}">
+        <th scope="row" th:text="${iterator.index + 1}"></th>
+        <td th:text="${equipmentFacility.facility.name}" style="width: 40%"></td>
+        <td th:text="${equipmentFacility.facility.price}" style="width: 20%"></td>
+        <td style="width: 20%">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-danger btn-sm" th:if="${userRole != 'USER' and equipment.status.name() == 'CREATE'}"
+                    th:attr="onclick=|confirm('Удалить запись?') && document.getElementById('remove-${equipmentFacility.facility.id}').click()|">
+              <i class="fa fa-trash-alt"></i> Удалить
+            </button>
+          </div>
+          <form th:action="@{/equipment/deleteFacility/{equipmentId}/{facilityId}(equipmentId=${equipment.id}, facilityId=${equipmentFacility.facility.id})}" method="post" class="d-none">
+            <button th:id="'remove-' + ${equipmentFacility.facility.id}" type="submit">
+              Удалить
+            </button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="text-center mt-4">
+    <!-- Основная форма с кнопками "Отправить", "Принять" и "Закончить работу" -->
+    <form th:action="@{'/equipment/' + ${equipment.id} + '/status-action?bool=true'}" method="post" class="d-inline">
+      <button type="submit" class="btn btn-primary"
+              th:if="${equipment.status.name() == 'CREATE' and userRole == 'ADMIN' and equipmentFacilities.size() > 0}"
+              th:text="'Отправить'"></button>
+
+      <button type="submit" class="btn btn-primary"
+              th:if="${equipment.status.name() == 'SEND' and userRole == 'USER'}"
+              th:text="'Принять'"></button>
+
+      <button type="submit" class="btn btn-primary"
+              th:if="${equipment.status.name() == 'IN_WORK' and userRole == 'ADMIN'}"
+              th:text="'Закончить работу'"></button>
+    </form>
+
+    <!-- Отдельная форма для кнопки "Отказать" -->
+    <form th:action="@{'/equipment/' + ${equipment.id} + '/status-action?bool=false'}" method="post" class="d-inline">
+      <button type="submit" class="btn btn-primary"
+              th:if="${equipment.status.name() == 'SEND' and userRole == 'USER'}"
+              th:text="'Отказать'"></button>
+    </form>
+    <a class="btn btn-primary btn-sm" th:if="${equipment.status.name() == 'PAY'}" th:href="@{/equipment/report/{id}(id=${equipment.id})}">
+      <i class="fa fa-info-circle"></i> Чек
+    </a>
+  </div>
+  <div class="text-center mt-4">
+    <a th:if="${equipment.status.name() == 'READY' and userRole == 'USER'}"
+       th:href="@{'/equipment/pay/' + ${equipment.id}}"
+       class="btn btn-primary">
+      <i class="fas fa-credit-card"></i> Перейти к оплате
+    </a>
+  </div>
+</div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

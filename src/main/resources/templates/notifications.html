@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{default}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <title>Уведомления</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .notification-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px auto;
+            width: 80%;
+            position: relative;
+        }
+
+        .notification-list li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            background-color: #f9f9f9;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-list li:hover {
+            background-color: #f2f2f2;
+        }
+
+        .notification-read {
+            background-color: #e0e0e0 !important;
+        }
+
+        .checkbox-container {
+            margin-right: 10px;
+        }
+
+        .buttons-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Промежуток между кнопками */
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container" layout:fragment="content">
+    <h2 class="mt-4 mb-4">Уведомления</h2>
+
+    <!-- Контейнер для кнопок -->
+    <div class="buttons-container mb-4">
+        <form th:action="@{/notifications/all-checked}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-primary">
+                Прочитать всё!
+            </button>
+        </form>
+        <button id="deleteSelected" class="btn btn-danger">Удалить выбранные</button>
+    </div>
+
+    <!-- Список уведомлений -->
+    <ul class="notification-list">
+        <!-- Thymeleaf генерирует элементы списка уведомлений -->
+        <li th:each="notification : ${notifications}"
+            th:data-fulltext="${notification.getNotification().getText()}"
+            th:data-uuid="${notification.getNotification().getId()}"
+            th:classappend="${notification.isChecked()} ? 'notification-read' : ''">
+            <div class="checkbox-container">
+                <input type="checkbox" class="notification-checkbox"
+                       th:data-uuid="${notification.getNotification().getId()}">
+            </div>
+            <div class="notification-content flex-grow-1">
+                <span th:text="${#strings.abbreviate(notification.getNotification().getText(), 50)}">
+                    Текст уведомления...
+                </span>
+            </div>
+        </li>
+    </ul>
+
+
+    <nav th:if="${totalPages > 1}">
+        <ul class="pagination justify-content-center mt-3">
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link" th:href="@{|/notifications?page=${currentPage - 1}|}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item" th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+                th:classappend="${page == currentPage} ? 'active'">
+                <a class="page-link" th:href="@{|/notifications?page=${page}|}" th:text="${page + 1}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link" th:href="@{|/notifications?page=${currentPage + 1}|}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p id="full-text"></p>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const modal = document.getElementById("modal");
+            const modalContent = document.getElementById("full-text");
+            const span = document.getElementsByClassName("close")[0];
+
+            span.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            window.onclick = function (event) {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            document.querySelectorAll(".notification-list li").forEach(item => {
+                item.addEventListener("click", function (event) {
+                    if (!event.target.closest(".checkbox-container")) {
+                        const fullText = this.getAttribute("data-fulltext");
+                        const uuid = this.getAttribute("data-uuid");
+                        modalContent.textContent = fullText;
+                        modal.style.display = "block";
+
+                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+                        fetch('http://localhost:8080/api/notifications/' + uuid, {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken
+                            }
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            item.classList.add('notification-read');
+                            return response.json();
+                        }).then((hasUnreadNotifications) => {
+                            if (!hasUnreadNotifications)
+                                document.getElementById("notificationBadge").style.display = 'none'
+                        }).catch(error => {
+                            console.error('There was a problem with your fetch operation:', error);
+                        });
+                    }
+                });
+            });
+
+            document.getElementById("deleteSelected").addEventListener("click", function () {
+                const selectedCheckboxes = document.querySelectorAll('.notification-checkbox:checked');
+                const selectedIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.getAttribute('data-uuid'));
+
+                if (selectedIds.length > 0) {
+                    if (confirm('Удалить выбранные уведомления?')) {
+                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+
+                        fetch('http://localhost:8080/api/notifications/delete', {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-Token': csrfToken
+                            },
+                            body: JSON.stringify(selectedIds)
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            window.location.href = '/notifications?page=0';
+                        }).catch(error => {
+                            console.error('There was a problem with your fetch operation:', error);
+                        });
+                    }
+                } else {
+                    alert('Выберите хотя бы одно уведомление для удаления.');
+                }
+            });
+        });
+    </script>
+</th:block>
+</body>
+</html>

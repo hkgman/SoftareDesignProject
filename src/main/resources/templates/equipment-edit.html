@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{default}" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Редактирование техники</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div layout:fragment="content" class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h4 class="card-title text-center">Редактирование техники</h4>
+          <div th:if="${errors}" th:text="${errors}" class="mb-3 alert alert-danger"></div>
+          <form th:action="@{/equipment/{id}(id=${id})}" th:object="${equipmentDto}" method="post">
+            <div class="form-group mb-3">
+              <label for="name">Название техники</label>
+              <input type="text" class="form-control" th:field="${equipmentDto.name}"
+                     placeholder="Название техники" required minlength="8" maxlength="64"/>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label" for="counterType">Тип</label>
+              <select id="counterType" class="form-select" th:field="${equipmentDto.equipmentType}">
+                <option th:each="value: ${types}"
+                        th:value="${value.id}"
+                        th:text="${value.text}">
+                </option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <button type="submit" class="btn btn-primary w-100">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

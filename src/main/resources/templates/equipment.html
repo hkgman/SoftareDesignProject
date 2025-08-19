@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{default}"
+      xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Оборудование</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+  <div class="d-flex justify-content-between mb-3">
+    <h2>Список оборудования</h2>
+    <!-- Если роль пользователя не ADMIN, показывать кнопку добавления -->
+    <a class="btn btn-primary" th:if="${userRole != 'ADMIN'}" th:href="@{/equipment/edit}">
+      <i class="fa-solid fa-microchip"></i> Добавить
+    </a>
+  </div>
+  <div th:if="${equipments.isEmpty() and userRole == 'USER'}">
+    <p class="empty-message">Список вашей техники пуст. Добавьте технику на ремонт!</p>
+  </div>
+  <div th:if="${equipments.isEmpty() and userRole == 'ADMIN'}">
+    <p class="empty-message">Сейчас здесь пусто. Дождитесь пока пользователи добавят технику!</p>
+  </div>
+  <div class="row">
+    <!-- Отображаем карточки с оборудованием -->
+    <div class="col-md-4" th:each="equipment : ${equipments}">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title" th:text="${equipment.name}">Название</h5>
+          <p class="card-text" th:text="${equipment.equipmentType.text}">Тип оборудования</p>
+          <p class="card-text" th:text="${equipment.status}">Статус</p>
+          <p class="card-text" th:text="${equipment.date}">Дата</p>
+          <!-- Кнопки "Изменить" и "Удалить" видны только для обычных пользователей -->
+          <a th:if="${userRole != 'ADMIN'}" class="btn btn-primary btn-sm"
+             th:href="@{/equipment/edit/{id}(id=${equipment.id})}">
+            <i class="fa fa-pencil-alt"></i> Изменить
+          </a>
+          <button th:if="${(userRole != 'ADMIN' and equipment.status.name() == 'CREATE') or (userRole != 'USER' and equipment.status.name() != 'CREATE')}" type="button" class="btn btn-danger btn-sm"
+                  th:attr="onclick=|confirm('Удалить запись?') && document.getElementById('remove-${equipment.id}').click()|">
+            <i class="fa fa-trash-alt"></i> Удалить
+          </button>
+          <a class="btn btn-primary btn-sm"
+             th:if="${!(userRole == 'USER' and equipment.status.name() == 'CREATE')}"
+             th:href="@{/equipment/{id}(id=${equipment.id})}">
+            <i class="fa fa-info-circle"></i> Подробнее
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Пагинация -->
+  <nav th:if="${totalPages > 1}">
+    <ul class="pagination justify-content-center mt-3">
+      <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+        <a class="page-link" th:href="@{|/equipment?page=${currentPage - 1}|}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      <li class="page-item" th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+          th:classappend="${page == currentPage} ? 'active'">
+        <a class="page-link" th:href="@{|/equipment?page=${page}|}" th:text="${page + 1}">1</a>
+      </li>
+      <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+        <a class="page-link" th:href="@{|/equipment?page=${currentPage + 1}|}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Кнопка отчета для не USER -->
+  <a class="btn btn-primary btn-sm" th:if="${userRole != 'USER'}" th:href="@{/equipment/report}">
+    <i class="fa fa-file-alt"></i> Отчет об оплаченных заказах
+  </a>
+
+
+
+  <!-- Форма удаления оборудования (скрытая) -->
+  <form th:each="equipment : ${equipments}" th:action="@{/equipment/delete/{id}(id=${equipment.id})}" method="post"
+        class="d-none">
+    <button th:id="'remove-' + ${equipment.id}" type="submit">Удалить</button>
+  </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

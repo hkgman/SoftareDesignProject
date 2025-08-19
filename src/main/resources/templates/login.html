@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{default}">
+<body>
+<div layout:fragment="content" class="d-flex justify-content-center align-items-start vh-100">
+    <div class="mt-5 w-100" style="max-width: 400px;">
+        <div th:if="${param.error}" class="alert alert-danger margin-bottom">
+            Пользователь не найден или пароль указан не верно
+        </div>
+        <div th:if="${param.logout}" class="alert alert-success margin-bottom">
+            Выход успешно произведен
+        </div>
+        <div th:if="${param.created}" class="alert alert-success margin-bottom">
+            Пользователь '<span th:text="${param.created}"></span>' успешно создан
+        </div>
+        <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+                <input type="text" id="username" name="username" class="form-control"
+                       placeholder="Почта" required="true" autofocus="true"/>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="password" name="password" class="form-control"
+                       placeholder="Пароль" required="true"/>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">Вход</button>
+                <a class="btn btn-outline-primary" href="/oauth2/authorization/google">Вход через Google</a>
+                <a class="btn btn-outline-primary" href="/signup">Зарегистрироваться</a>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

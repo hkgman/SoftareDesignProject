@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата оборудования</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <!-- Карточка с объектами Facility -->
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-header text-center">
+            <h4>Оплата оборудования: <span th:text="${equipment.name}"></span></h4>
+        </div>
+        <div class="card-body">
+            <ul class="list-group mb-3">
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    th:each="equipmentFacility : ${equipmentFacilities}">
+                    <span th:text="${equipmentFacility.facility.name}"></span>
+                    <span th:text="${equipmentFacility.facility.price + ' ₽'}"></span>
+                </li>
+            </ul>
+            <div class="text-right font-weight-bold">
+                <span>Итого:</span>
+                <span th:text="${AllPrice + ' ₽'}"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Кнопка для оплаты -->
+    <div class="text-center mt-4">
+        <form th:action="@{'/equipment/' + ${equipment.id} + '/pay'}" method="post">
+            <button type="submit" class="btn btn-primary btn-lg">
+                Оплатить
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

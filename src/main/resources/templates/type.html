@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{default}"
+      xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Типы техники</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+        .card {
+            border: 1px solid #ddd; /* Цвет и толщина границы */
+            border-radius: 5px; /* Скругленные углы */
+            padding: 1rem; /* Отступы внутри карточки */
+            margin-bottom: 1rem; /* Расстояние между карточками */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Легкая тень */
+        }
+
+        .card-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .card-body .info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .card-body .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .card-body strong {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+  <div class="d-flex justify-content-between mb-3">
+    <h2>Типы техники</h2>
+    <a class="btn btn-primary" th:href="@{/type/edit}">
+      <i class="fa-solid fa-tag"></i> Добавить
+    </a>
+  </div>
+  <div th:if="${message != null}" class="alert alert-info">
+    <p th:text="${message}"></p>
+  </div>
+  <div th:if="${types.isEmpty()}">
+    <p class="empty-message">Сейчас здесь пусто. Добавьте новые элементы!</p>
+  </div>
+  <!-- Карточки типов техники -->
+  <div class="card" th:each="type : ${types}">
+    <div class="card-body">
+      <div class="info">
+        <strong th:text="${type.text}">Название типа</strong>
+        <span class="text-muted" th:text="${type.id}">ID</span>
+      </div>
+      <div class="actions">
+        <a class="btn btn-outline-primary btn-sm" th:href="@{/type/edit/{id}(id=${type.id})}">
+          <i class="fa fa-pencil-alt"></i> Изменить
+        </a>
+        <button type="button" class="btn btn-outline-danger btn-sm"
+                th:attr="onclick=|confirm('Удалить запись?') && document.getElementById('remove-${type.id}').click()|">
+          <i class="fa fa-trash-alt"></i> Удалить
+        </button>
+        <form th:action="@{/type/delete/{id}(id=${type.id})}" method="post" class="d-none">
+          <button th:id="'remove-' + ${type.id}" type="submit"></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Пагинация -->
+  <nav th:if="${totalPages > 1}">
+    <ul class="pagination justify-content-center mt-3">
+      <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+        <a class="page-link" th:href="@{|/type?page=${currentPage - 1}|}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      <li class="page-item" th:each="page : ${#numbers.sequence(0, totalPages - 1)}"
+          th:classappend="${page == currentPage} ? 'active'">
+        <a class="page-link" th:href="@{|/type?page=${page}|}" th:text="${page + 1}">1</a>
+      </li>
+      <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+        <a class="page-link" th:href="@{|/type?page=${currentPage + 1}|}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

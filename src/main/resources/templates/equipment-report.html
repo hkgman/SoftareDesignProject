@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{default}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет по оборудованию</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+<div layout:fragment="content" class="container mt-4">
+    <h2 class="mb-4">Отчет по оборудованию</h2>
+    <div th:if="${reportList.isEmpty()}">
+        <p class="empty-message">Тут пусто. Нет оплаченных ремонтов!</p>
+    </div>
+    <!-- Отображаем карточки с данными об оборудовании и услугами -->
+    <div class="row">
+        <div class="col-md-6 mb-4" th:each="report, iterStat : ${reportList}">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${report.equipmentName}">Название оборудования</h5>
+                    <p class="card-text"><strong>Тип:</strong> <span th:text="${report.equipmentType}">Тип оборудования</span></p>
+                    <p class="card-text"><strong>Владелец:</strong> <span th:text="${report.userName}">Имя пользователя</span></p>
+                    <p class="card-text"><strong>Статус:</strong> Оплачен</p>
+
+                    <!-- Выводим список услуг -->
+                    <h6 class="mt-3">Услуги:</h6>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="facility : ${report.facilities}">
+                            <span th:text="${facility.name}">Услуга</span>
+                            <span class="badge badge-secondary" th:text="${facility.price}">Цена</span>
+                        </li>
+                    </ul>
+
+                    <!-- Сумма цен -->
+                    <p class="mt-3"><strong>Общая сумма:</strong>
+                        <span th:text="${allPrices[iterStat.index]}">0</span> руб.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
